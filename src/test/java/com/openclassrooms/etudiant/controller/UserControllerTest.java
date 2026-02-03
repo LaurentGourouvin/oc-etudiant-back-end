@@ -1,11 +1,13 @@
 package com.openclassrooms.etudiant.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.openclassrooms.etudiant.dto.LoginRequestDTO;
 import com.openclassrooms.etudiant.dto.RegisterDTO;
 import com.openclassrooms.etudiant.entities.User;
 import com.openclassrooms.etudiant.repository.UserRepository;
 import com.openclassrooms.etudiant.service.UserService;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -59,6 +61,10 @@ public class UserControllerTest {
     public void afterEach() {
         userRepository.deleteAll();
     }
+    @BeforeEach
+    public void beforeEach() {
+        userRepository.deleteAll();
+    }
 
     @Test
     public void registerUserWithoutRequiredData() throws Exception {
@@ -70,7 +76,7 @@ public class UserControllerTest {
                         .content(objectMapper.writeValueAsString(registerDTO))
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
-                .andDo(print())
+                //.andDo(print())
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
@@ -95,7 +101,7 @@ public class UserControllerTest {
                         .content(objectMapper.writeValueAsString(registerDTO))
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
-                .andDo(print())
+                //.andDo(print())
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
@@ -113,7 +119,50 @@ public class UserControllerTest {
                         .content(objectMapper.writeValueAsString(registerDTO))
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
-                .andDo(print())
+                //.andDo(print())
                 .andExpect(MockMvcResultMatchers.status().isCreated());
+    }
+
+    @Test
+    public void loginWithNoCredentials() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                //.andDo(print())
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+
+    @Test
+    public void loginWithEmptyBody() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/login")
+                        .content("{}")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                //.andDo(print())
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+
+    @Test
+    public void loginWithCredentials() throws Exception {
+        // GIVEN
+        User user = new User();
+        user.setFirstName(FIRST_NAME);
+        user.setLastName(LAST_NAME);
+        user.setLogin(LOGIN);
+        user.setPassword(PASSWORD);
+        userService.register(user);
+
+        LoginRequestDTO dto = new LoginRequestDTO();
+        dto.setLogin(LOGIN);
+        dto.setPassword(PASSWORD);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/login")
+                        .content(objectMapper.writeValueAsString(dto))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                //.andDo(print()) 
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.token").isNotEmpty())
+                .andReturn();
     }
 }
