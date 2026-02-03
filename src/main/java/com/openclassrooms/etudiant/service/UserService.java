@@ -40,7 +40,7 @@ public class UserService {
         if (user.isPresent() && passwordEncoder.matches(password, user.get().getPassword())) {
             UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
                     .username(login)
-                    .password("")
+                    .password(user.get().getPassword())
                     .build();
 
             

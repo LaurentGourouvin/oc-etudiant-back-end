@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 @Service
 public class JwtService {
 
+    //use a secret with a base64 format in .env file
     @Value("${JWT_SECRET}")
     private String secret;
 
