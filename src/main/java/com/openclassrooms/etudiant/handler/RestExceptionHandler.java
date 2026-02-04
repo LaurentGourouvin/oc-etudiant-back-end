@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import com.openclassrooms.etudiant.exception.StudentNotFoundException;
+
 import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 
@@ -56,7 +58,23 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         logger.error(exception.getMessage(), exception);
     }
 
+    private void logError(Exception exception, boolean stackTrace) {
+        if (stackTrace) {
+            logger.error(exception.getMessage(), exception);
+        } else {
+            logger.warn(exception.getMessage());
+        }
+    }
+
     private ErrorDetails getErrorDetails(Exception exception, WebRequest request) {
         return new ErrorDetails(LocalDateTime.now(), exception.getMessage(), request.getDescription(false));
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(StudentNotFoundException.class)
+    protected ResponseEntity<Object> handleStudentNotFound(StudentNotFoundException ex, WebRequest request) {
+        logError(ex, false);
+        return handleExceptionInternal(ex, getErrorDetails(ex, request), new HttpHeaders(),
+            HttpStatus.NOT_FOUND, request);
     }
 }
