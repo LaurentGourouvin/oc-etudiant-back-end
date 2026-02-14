@@ -50,12 +50,12 @@ class StudentServiceTest {
         when(studentRepository.existsByEmail("ana@ex.com")).thenReturn(false);
         when(studentRepository.save(any(Student.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        // WHEN + THEN
+        // WHEN + THEN : la création ne doit pas lever d'exception et doit appeler save()
         assertDoesNotThrow(() -> studentService.createStudent(student));
 
         verify(studentRepository, times(1)).existsByEmail("ana@ex.com");
 
-        // Optionnel : vérifier l'objet réellement passé à save()
+        // vérifier l'objet réellement passé à save()
         ArgumentCaptor<Student> captor = ArgumentCaptor.forClass(Student.class);
         verify(studentRepository, times(1)).save(captor.capture());
 
@@ -87,10 +87,10 @@ class StudentServiceTest {
         when(studentRepository.findById(id)).thenReturn(Optional.of(student));
         when(studentDtoMapper.toDto(student)).thenReturn(dto);
 
-        // WHEN
+        // WHEN on récupère par id
         StudentGetDTO result = studentService.getStudentById(id);
 
-        // THEN
+        // THEN : on obtient le DTO et les bons appels sont effectués
         assertEquals(dto, result);
 
         verify(studentRepository, times(1)).findById(id);
@@ -118,10 +118,10 @@ class StudentServiceTest {
         when(studentRepository.findByEmail(email)).thenReturn(Optional.of(student));
         when(studentDtoMapper.toDto(student)).thenReturn(dto);
 
-        // WHEN
+        // WHEN :on récupère par email
         StudentGetDTO result = studentService.getStudentByEmail(email);
 
-        // THEN
+        // THEN on obtient le DTO et les bons appels sont effectués
         assertEquals(dto, result);
 
         verify(studentRepository, times(1)).findByEmail(email);
@@ -152,10 +152,10 @@ class StudentServiceTest {
         when(studentDtoMapper.toDto(student1)).thenReturn(dto1);
         when(studentDtoMapper.toDto(student2)).thenReturn(dto2);
 
-        // WHEN
+        // WHEN on récupère tous les étudiants
         List<StudentGetDTO> result = studentService.getAllStudents();
 
-        // THEN
+        // THEN liste de taille 2 et contenu attendu
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals(dto1, result.get(0));
@@ -173,7 +173,7 @@ class StudentServiceTest {
         Long id = 1L;
         when(studentRepository.existsById(id)).thenReturn(true);
 
-        // WHEN + THEN
+        // WHEN + THEN suppression sans exception et deleteById appelé
         assertDoesNotThrow(() -> studentService.deleteStudent(id));
 
         verify(studentRepository, times(1)).existsById(id);
@@ -213,7 +213,7 @@ class StudentServiceTest {
         when(studentRepository.save(any(Student.class))).thenReturn(savedStudent);
         when(studentDtoMapper.toDto(savedStudent)).thenReturn(dtoResult);
 
-        // WHEN
+        // WHEN mise à jour complète
         StudentGetDTO result = studentService.updateAll(id, updateDTO);
 
         // THEN
@@ -239,6 +239,7 @@ class StudentServiceTest {
         Long id = 1L;
         when(studentRepository.findById(id)).thenReturn(Optional.empty());
 
+        // THEN exception + message attendu
         StudentNotFoundException ex = assertThrows(
                 StudentNotFoundException.class,
                 () -> studentService.getStudentById(id)
@@ -255,6 +256,7 @@ class StudentServiceTest {
         String email = "ana@ex.com";
         when(studentRepository.findByEmail(email)).thenReturn(Optional.empty());
 
+        // WHEN + THEN: exception + message attendu
         StudentNotFoundException ex = assertThrows(
                 StudentNotFoundException.class,
                 () -> studentService.getStudentByEmail(email)
@@ -271,6 +273,7 @@ class StudentServiceTest {
         Long id = 1L;
         when(studentRepository.existsById(id)).thenReturn(false);
 
+        // WHEN + THEN: exception + aucune suppression effectuée
         StudentNotFoundException ex = assertThrows(
                 StudentNotFoundException.class,
                 () -> studentService.deleteStudent(id)
@@ -292,7 +295,8 @@ class StudentServiceTest {
         input.setEmail("new@ex.com");
 
         when(studentRepository.findById(id)).thenReturn(Optional.empty());
-
+        
+        // WHEN + THEN: exception + aucun save effectué
         StudentNotFoundException ex = assertThrows(
                 StudentNotFoundException.class,
                 () -> studentService.updateAll(id, input)
