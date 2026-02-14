@@ -56,6 +56,7 @@ public class StudentControllerTest {
 
     @DynamicPropertySource
     static void configureTestProperties(DynamicPropertyRegistry registry) {
+        // Configuration dynamique de la BDD MySQL Testcontainers pour les tests d'intégration
         registry.add("spring.datasource.url", () -> mySQLContainer.getJdbcUrl());
         registry.add("spring.datasource.username", () -> mySQLContainer.getUsername());
         registry.add("spring.datasource.password", () -> mySQLContainer.getPassword());
@@ -81,6 +82,7 @@ public class StudentControllerTest {
 
     @AfterEach
     void afterEach() {
+        // Nettoyage après chaque test pour éviter les effets de bord entre tests
         studentRepository.deleteAll();
         userRepository.deleteAll();
     }
@@ -110,6 +112,8 @@ public class StudentControllerTest {
 
     @Test
     void createStudent_shouldReturn201() throws Exception {
+        // on appelle POST /api/student avec un token valide
+        // l'API doit répondre 201 Created
         StudentCreateDTO body = new StudentCreateDTO();
         body.setFirstName("Ana");
         body.setLastName("Kim");
@@ -125,6 +129,9 @@ public class StudentControllerTest {
 
     @Test
     void getAllStudents_shouldReturnListOf2() throws Exception {
+
+        // on appelle GET /api/student
+        // on récupère une liste JSON de taille 2, contenant au minimum firstName/lastName/email
         Student s1 = new Student();
         s1.setFirstName("Ana");
         s1.setLastName("Kim");
@@ -154,6 +161,9 @@ public class StudentControllerTest {
 
     @Test
     void getStudentById_shouldReturn200() throws Exception {
+        // on appelle GET /api/student/{id}
+        // on récupère 200 OK + les champs attendus
+
         Student s = new Student();
         s.setFirstName("Ana");
         s.setLastName("Kim");
@@ -171,6 +181,8 @@ public class StudentControllerTest {
 
     @Test
     void getStudentByEmail_shouldReturn200() throws Exception {
+         // on appelle GET /api/student/by-email?email=...
+        // on récupère 200 OK et l'email correspondant
         Student s = new Student();
         s.setFirstName("Ana");
         s.setLastName("Kim");
@@ -187,6 +199,8 @@ public class StudentControllerTest {
 
     @Test
     void updateAll_shouldReturn200AndUpdatedStudent() throws Exception {
+        // on appelle PUT /api/student/{id}
+        // on récupère 200 OK + le JSON mis à jour
         Student s = new Student();
         s.setFirstName("Ana");
         s.setLastName("Kim");
@@ -211,6 +225,8 @@ public class StudentControllerTest {
 
     @Test
     void deleteStudent_shouldReturn204() throws Exception {
+        // on appelle DELETE /api/student/{id}
+        // l'API doit répondre 204 No Content
         Student s = new Student();
         s.setFirstName("Ana");
         s.setLastName("Kim");
@@ -226,6 +242,8 @@ public class StudentControllerTest {
     @Test
     void createStudent_invalidBody_shouldReturn400() throws Exception {
         // @Valid doit déclencher un 400 si StudentCreateDTO a @NotBlank/@Email
+        // on appelle POST /api/student avec un DTO invalide
+        // l'API doit répondre 400 Bad Request
         StudentCreateDTO body = new StudentCreateDTO();
 
         mockMvc.perform(MockMvcRequestBuilders.post(STUDENT_BASE_URL)
@@ -240,6 +258,8 @@ public class StudentControllerTest {
     @Test
     void createStudent_existingEmail_shouldReturn4xx() throws Exception {
         // GIVEN: un étudiant existe déjà
+        // on appelle POST /api/student avec un email déjà existant
+        // l'API doit renvoyer une erreur 4xx
         Student existing = new Student();
         existing.setFirstName("Ana");
         existing.setLastName("Kim");
@@ -262,6 +282,8 @@ public class StudentControllerTest {
 
     @Test
     void getStudentById_notFound_shouldReturn404() throws Exception {
+        // on appelle GET /api/student/999999
+        // ㅣ'API doit répondre 404 Not Found
         mockMvc.perform(MockMvcRequestBuilders.get(STUDENT_BASE_URL + "/999999")
                         .header("Authorization", bearer())
                         .accept(MediaType.APPLICATION_JSON))
@@ -270,6 +292,8 @@ public class StudentControllerTest {
 
     @Test
     void getStudentByEmail_notFound_shouldReturn404() throws Exception {
+        // on appelle GET /api/student/by-email?email=missing@ex.com
+        // l'API doit répondre 404 Not Found
         mockMvc.perform(MockMvcRequestBuilders.get(STUDENT_BASE_URL + "/by-email")
                         .header("Authorization", bearer())
                         .queryParam("email", "missing@ex.com")
@@ -279,6 +303,8 @@ public class StudentControllerTest {
 
     @Test
     void deleteStudent_notFound_shouldReturn404() throws Exception {
+        // on appelle DELETE /api/student/999999
+        // l'API doit répondre 404 Not Found
         mockMvc.perform(MockMvcRequestBuilders.delete(STUDENT_BASE_URL + "/999999")
                         .header("Authorization", bearer()))
                 .andExpect(status().isNotFound());
@@ -286,6 +312,8 @@ public class StudentControllerTest {
 
     @Test
     void updateAll_notFound_shouldReturn404() throws Exception {
+        // on appelle PUT /api/student/999999
+        // l'API doit répondre 404 Not Found
         StudentGetDTO body = new StudentGetDTO();
         body.setFirstName("New");
         body.setLastName("Name");
